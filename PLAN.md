@@ -1,6 +1,6 @@
 # 📝 writeJP — 일본어 필사 봇 설계 계획서 (v3)
 
-매일 일본어 뉴스에서 15~20문장을 뽑아 Discord로 전송하고,
+매일 일본어 뉴스에서 10문장을 뽑아 Discord로 전송하고,
 문장에 나온 JLPT 단어를 단어장으로 함께 보내는 학습 봇.
 
 > v2 → v3 변경 요약은 맨 아래 "부록 A"에 있다.
@@ -24,7 +24,7 @@ config.json ─┐
      └──────┬────────┘
             ▼
      ┌───────────────┐
-     │Sentence Picker│  문장 분리 → 필터 → 17문장 (문장별 출처 추적)
+     │Sentence Picker│  문장 분리 → 필터 → 10문장 (문장별 출처 추적)
      └──────┬────────┘
             ▼
      ┌───────────────┐      ┌──────────────┐
@@ -107,7 +107,7 @@ GitHub Actions 러너는 매번 새로 만들어지므로 로컬 파일은 저�
 {
   "difficulty": "intermediate",
   "categories": ["business", "world"],
-  "sentence_count": 17,
+  "sentence_count": 10,
   "vocab_levels": null
 }
 ```

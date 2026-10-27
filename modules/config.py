@@ -18,7 +18,7 @@ DEFAULT_VOCAB_LEVELS = {
 DEFAULTS = {
     "difficulty":     "intermediate",
     "categories":     ["business", "world"],
-    "sentence_count": 17,
+    "sentence_count": 10,
     "vocab_levels":   None,
 }
 
