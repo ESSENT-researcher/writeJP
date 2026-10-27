@@ -53,8 +53,12 @@ def build_news_embed(
     difficulty: str,
     categories: list[str],
     now: datetime | None = None,
+    translations: list[str] | None = None,
 ) -> dict:
-    """필사 문장 Embed. sources는 실제 사용된 기사 목록."""
+    """
+    필사 문장 Embed. sources는 실제 사용된 기사 목록.
+    translations가 있으면 각 문장 밑에 한국어 번역을 인용문(>)으로 붙인다.
+    """
     cats = " / ".join(CATEGORY_LABELS.get(c, c) for c in categories)
 
     header = [f"**難易度:** {DIFFICULTY_LABELS.get(difficulty, difficulty)}"
@@ -63,7 +67,12 @@ def build_news_embed(
         header.append(f"**記事:** [{s['title']}]({s['url']})　*{s['source']}*")
     header.append("━━━━━━━━━━━━━━━━━━━━━")
 
-    body = [f"`{i:02d}.` {s}" for i, s in enumerate(sentences, 1)]
+    body = []
+    for i, sentence in enumerate(sentences, 1):
+        block = f"`{i:02d}.` {sentence}"
+        if translations and i <= len(translations) and translations[i - 1]:
+            block += f"\n> {translations[i - 1]}"      # 문장과 번역이 한 덩어리로 잘리도록
+        body.append(block)
     return {
         "title":       f"📰 今日の日本語ニュース｜{format_date_jp(now)}",
         "description": _join_lines(header + body),
@@ -105,9 +114,11 @@ def send_to_discord(
     difficulty:  str,
     categories:  list[str],
     vocab_list:  list[dict],
+    translations: list[str] | None = None,
 ) -> bool:
     """뉴스 Embed + 단어장 Embed를 보낸다. 성공하면 True."""
-    embeds = [build_news_embed(sentences, sources, difficulty, categories)]
+    embeds = [build_news_embed(sentences, sources, difficulty, categories,
+                               translations=translations)]
     vocab_embed = build_vocab_embed(vocab_list)
     if vocab_embed:
         embeds.append(vocab_embed)

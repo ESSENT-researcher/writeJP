@@ -73,3 +73,23 @@ def test_config_rejects_unknown_difficulty(tmp_path, monkeypatch):
     monkeypatch.delenv("WRITEJP_DIFFICULTY", raising=False)
     with pytest.raises(ValueError):
         load_config(str(path))
+
+
+def test_news_embed_puts_korean_translation_under_each_sentence():
+    embed = ds.build_news_embed(["一文目です。", "二文目です。"], SOURCES, "intermediate", ["business"],
+                                translations=["첫 문장입니다.", ""])
+    lines = embed["description"].splitlines()
+    first = lines.index("`01.` 一文目です。")
+    assert lines[first + 1] == "> 첫 문장입니다."
+    assert lines[first + 2] == "`02.` 二文目です。"      # 번역이 비어 있으면 인용문 줄을 만들지 않는다
+
+
+def test_translated_embed_stays_within_discord_limit_and_keeps_pairs_together():
+    sentences = ["あ" * 110 + "。" for _ in range(40)]
+    translations = ["번역" * 40 for _ in range(40)]
+    desc = ds.build_news_embed(sentences, SOURCES, "intermediate", ["world"],
+                               translations=translations)["description"]
+    assert len(desc) <= 4096
+    for i, line in enumerate(desc.splitlines()):
+        if line.startswith("`") and i + 1 < len(desc.splitlines()):
+            assert desc.splitlines()[i + 1].startswith(("> ", "`", "…"))   # 문장 다음 줄은 번역이거나 다음 문장

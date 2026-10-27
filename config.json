@@ -4,5 +4,7 @@
   "rotate_categories": true,
   "sentence_count": 8,
   "max_age_hours": 24,
+  "furigana": true,
+  "translate": true,
   "vocab_levels": null
 }

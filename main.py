@@ -15,19 +15,24 @@ from dotenv import load_dotenv
 from modules.config          import load_config, resolve_categories
 from modules.dict_lookup     import load_vocab_db
 from modules.discord_sender  import send_to_discord
+from modules.furigana        import add_furigana
 from modules.news_fetcher    import fetch_articles
 from modules.sentence_picker import pick_sentences
 from modules.state           import load_sent_articles, save_sent_articles
+from modules.translator      import translate_sentences
 from modules.vocab_analyzer  import analyze_vocab
 
 
-def print_preview(sentences: list[str], sources: list[dict], vocab_list: list[dict]) -> None:
+def print_preview(sentences: list[str], sources: list[dict], vocab_list: list[dict],
+                  translations: list[str] | None = None) -> None:
     print("\n📰 출처")
     for s in sources:
         print(f"  - [{s['source']}] {s['title']}\n    {s['url']}")
     print(f"\n📝 필사 문장 ({len(sentences)}개)")
     for i, s in enumerate(sentences, 1):
         print(f"  {i:02d}. {s}")
+        if translations and translations[i - 1]:
+            print(f"      > {translations[i - 1]}")
     print(f"\n📚 단어장 ({len(vocab_list)}개)")
     for v in vocab_list:
         print(f"  [{v['level']}] {v['word']}（{v['reading']}）— {v['meaning']}")
@@ -64,17 +69,22 @@ def main() -> int:
     vocab_db   = load_vocab_db()
     vocab_list = analyze_vocab(picked["sentences"], vocab_db, config["vocab_levels"])
 
+    # 표시용 문장: 후리가나 + 한국어 번역 (단어 분석은 원문 그대로 사용했다)
+    shown = [add_furigana(s) for s in picked["sentences"]] if config["furigana"] else picked["sentences"]
+    translations = translate_sentences(picked["sentences"]) if config["translate"] else None
+
     if args.dry_run:
-        print_preview(picked["sentences"], picked["sources"], vocab_list)
+        print_preview(shown, picked["sources"], vocab_list, translations)
         return 0
 
     ok = send_to_discord(
         webhook_url = webhook_url,
-        sentences   = picked["sentences"],
+        sentences   = shown,
         sources     = picked["sources"],
         difficulty  = config["difficulty"],
         categories  = config["categories"],
         vocab_list  = vocab_list,
+        translations = translations,
     )
     if not ok:
         return 1

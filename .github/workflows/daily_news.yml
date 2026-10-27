@@ -41,6 +41,7 @@ jobs:
         run: python3 main.py
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}   # 없으면 번역만 생략된다
           WRITEJP_DIFFICULTY: ${{ github.event.inputs.difficulty }}
           WRITEJP_CATEGORIES: ${{ github.event.inputs.categories }}
 

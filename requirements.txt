@@ -4,3 +4,4 @@ requests>=2.32.3,<3
 fugashi>=1.4.0,<2
 ipadic==1.0.0
 python-dotenv>=1.0.1,<2
+anthropic>=1.0,<3

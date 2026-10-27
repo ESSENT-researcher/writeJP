@@ -23,6 +23,8 @@ DEFAULTS = {
     "sentence_count":    8,
     "vocab_levels":      None,
     "max_age_hours":     24,
+    "furigana":          True,     # 일본어 문장의 한자에 후리가나 표기
+    "translate":         True,     # 문장 밑에 한국어 번역 (ANTHROPIC_API_KEY 필요, 없으면 생략)
 }
 
 JST = timezone(timedelta(hours=9))
