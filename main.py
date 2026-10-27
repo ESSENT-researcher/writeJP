@@ -12,7 +12,7 @@ import sys
 
 from dotenv import load_dotenv
 
-from modules.config          import load_config
+from modules.config          import load_config, resolve_categories
 from modules.dict_lookup     import load_vocab_db
 from modules.discord_sender  import send_to_discord
 from modules.news_fetcher    import fetch_articles
@@ -43,6 +43,7 @@ def main() -> int:
     print("🇯🇵 writeJP 시작" + (" (dry-run)" if args.dry_run else ""))
 
     config = load_config()
+    config["categories"] = resolve_categories(config)   # 오늘의 분야
     webhook_url = os.environ.get("DISCORD_WEBHOOK_URL", "")
     if not webhook_url and not args.dry_run:
         print("❌ DISCORD_WEBHOOK_URL 환경변수가 없습니다 (.env 또는 GitHub Secrets).")

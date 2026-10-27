@@ -1,7 +1,8 @@
 {
   "difficulty": "intermediate",
-  "categories": ["business", "world"],
-  "sentence_count": 10,
+  "categories": ["business", "world", "science"],
+  "rotate_categories": true,
+  "sentence_count": 8,
   "max_age_hours": 24,
   "vocab_levels": null
 }

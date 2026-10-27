@@ -21,8 +21,6 @@ YAHOO_RSS = {
     "business":      "https://news.yahoo.co.jp/rss/topics/business.xml",
     "domestic":      "https://news.yahoo.co.jp/rss/topics/domestic.xml",
     "science":       "https://news.yahoo.co.jp/rss/topics/science.xml",
-    "sports":        "https://news.yahoo.co.jp/rss/topics/sports.xml",
-    "entertainment": "https://news.yahoo.co.jp/rss/topics/entertainment.xml",
 }
 ASAHI_RSS = "https://www.asahi.com/rss/asahi/newsheadlines.rdf"
 
@@ -36,6 +34,8 @@ HEADERS = {
 TIMEOUT        = 10
 REQUEST_DELAY  = 1.0   # 서버 부하 방지 (초)
 MIN_TEXT_CHARS = 100
+MIN_CANDIDATES = 3     # 새 기사 후보가 이보다 적으면 시간 범위를 넓혀 다시 찾는다
+WIDEN_FACTOR   = 3
 
 # 불필요한 태그
 NOISE_TAGS = ["script", "style", "nav", "footer", "header", "aside",
@@ -200,8 +200,14 @@ def fetch_articles(
     """
     print(f"📡 뉴스 수집 시작 (난이도: {difficulty}, 분야: {categories}, 최근 {max_age_hours:g}시간)")
 
-    candidates = [c for c in list_candidates(difficulty, categories, max_age_hours)
-                  if c["url"] not in sent]
+    def unsent(hours: float) -> list[dict]:
+        return [c for c in list_candidates(difficulty, categories, hours) if c["url"] not in sent]
+
+    candidates = unsent(max_age_hours)
+    if len(candidates) < MIN_CANDIDATES:
+        wider = max_age_hours * WIDEN_FACTOR
+        print(f"ℹ️  최근 {max_age_hours:g}시간 기사가 {len(candidates)}개뿐이라 {wider:g}시간으로 넓혀 다시 찾습니다")
+        candidates = unsent(wider)
     if not candidates:
         print("⚠️  조건에 맞는 새 기사가 없습니다.")
         return []

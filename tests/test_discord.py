@@ -60,10 +60,10 @@ def test_config_env_override_and_default_levels(tmp_path, monkeypatch):
     path = tmp_path / "c.json"
     path.write_text('{"difficulty": "intermediate", "vocab_levels": null}', encoding="utf-8")
     monkeypatch.setenv("WRITEJP_DIFFICULTY", "advanced")
-    monkeypatch.setenv("WRITEJP_CATEGORIES", "sports, science")
+    monkeypatch.setenv("WRITEJP_CATEGORIES", "domestic, science")
     config = load_config(str(path))
     assert config["difficulty"] == "advanced"
-    assert config["categories"] == ["sports", "science"]
+    assert config["categories"] == ["domestic", "science"]
     assert config["vocab_levels"] == ["N2", "N1"]
 
 

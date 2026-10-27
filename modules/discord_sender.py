@@ -18,8 +18,6 @@ CATEGORY_LABELS = {
     "business":      "💹 経済",
     "domestic":      "🗾 社会",
     "science":       "🔬 科学",
-    "sports":        "⚽ スポーツ",
-    "entertainment": "🎬 エンタメ",
 }
 LEVEL_ICONS = {"N1": "🔴", "N2": "🟠", "N3": "🟡", "N4": "🟢", "N5": "🔵"}
 
