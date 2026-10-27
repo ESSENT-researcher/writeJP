@@ -1,0 +1,12 @@
+{
+  "name": "writejp-bot",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "register": "node register-commands.mjs",
+    "test": "node --test"
+  },
+  "devDependencies": { "wrangler": "^3.90.0" }
+}

@@ -45,3 +45,21 @@ pytest                        # 단위 테스트
 `python3 scripts/build_jmdict.py extract` / `merge` — JMdict에서 우선순위 태그가 붙은 흔한 단어 30,169개를 골라 `data/jmdict.jsonl`(표기, 읽기, 한국어 뜻, 영어 뜻)로 만든다. 한국어 뜻은 `data/jmdict_ko.csv`(id, 한국어 뜻)에 저장돼 있다.
 
 JMdict는 [Electronic Dictionary Research and Development Group](https://www.edrdg.org/)의 자산이며 [CC BY-SA 4.0](https://www.edrdg.org/edrdg/licence.html) 라이선스로 배포된다. 이 저장소의 `data/jmdict.jsonl`, `data/jmdict_ko.csv`도 같은 조건(저작자 표시, 동일 조건 변경 허락)을 따른다.
+
+## 슬래시 명령 봇 (`/단어`)
+Discord에서 `/단어 단어:政府`처럼 물어보면 JLPT 단어장 → JMdict 순서로 찾아 한국어 뜻을 답한다. Cloudflare Workers에서 돌아가며 무료 한도로 충분하다.
+
+1. [Discord Developer Portal](https://discord.com/developers/applications)에서 앱을 만들고 **Application ID**, **Public Key**, **Bot Token**을 확인한다.
+2. 사전 데이터 만들기: `python3 scripts/build_worker_dict.py` (→ `worker/dict.json`)
+3. 배포:
+   ```
+   cd worker && npm install
+   npx wrangler login
+   npx wrangler secret put DISCORD_PUBLIC_KEY
+   npx wrangler deploy
+   ```
+4. 배포 후 나온 `https://writejp-bot.<계정>.workers.dev` 주소를 Developer Portal의 **Interactions Endpoint URL**에 넣고 저장한다.
+5. 명령 등록: `DISCORD_APP_ID=... DISCORD_BOT_TOKEN=... npm run register`
+6. 봇 초대 링크(OAuth2 → URL Generator, scope `applications.commands`)로 서버에 추가한다.
+
+사전 데이터를 고쳤다면 2번을 다시 하고 `npx wrangler deploy`를 한 번 더 실행한다.
