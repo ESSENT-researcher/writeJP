@@ -1,0 +1,67 @@
+name: Daily Japanese News (writeJP)
+
+on:
+  schedule:
+    - cron: '0 23 * * *'   # UTC 23:00 = KST 08:00
+  workflow_dispatch:
+    inputs:
+      difficulty:
+        description: '난이도 (beginner / intermediate / advanced). 비우면 config.json 값'
+        required: false
+        default: ''
+      categories:
+        description: '분야 (world,business,domestic,science,sports,entertainment 중 쉼표 구분)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write   # data/sent_articles.json 커밋용
+
+concurrency:
+  group: writejp
+  cancel-in-progress: false
+
+jobs:
+  send-news:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run writeJP
+        run: python3 main.py
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          WRITEJP_DIFFICULTY: ${{ github.event.inputs.difficulty }}
+          WRITEJP_CATEGORIES: ${{ github.event.inputs.categories }}
+
+      # 러너는 일회성이므로 전송 기록을 레포에 남겨야 중복 기사가 안 나온다
+      - name: Commit sent-article history
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/sent_articles.json
+          if git diff --cached --quiet; then
+            echo "변경 없음"
+          else
+            git commit -m "chore: update sent articles [skip ci]"
+            git push
+          fi
+
+      - name: Notify failure on Discord
+        if: failure()
+        run: |
+          curl -sS -H "Content-Type: application/json" \
+            -d "{\"content\": \"⚠️ writeJP 실행 실패: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}" \
+            "$DISCORD_WEBHOOK_URL"
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
