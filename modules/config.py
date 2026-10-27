@@ -20,6 +20,7 @@ DEFAULTS = {
     "categories":     ["business", "world"],
     "sentence_count": 10,
     "vocab_levels":   None,
+    "max_age_hours":  24,
 }
 
 

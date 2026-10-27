@@ -5,6 +5,7 @@ news_fetcher.py
 
 import re
 import time
+from datetime import datetime, timedelta, timezone
 from itertools import zip_longest
 from urllib.parse import urljoin
 
@@ -70,8 +71,32 @@ def _parse_rss(url: str) -> list[dict]:
         link = entry.get("link", "")
         # 사이트 루트·토픽 목록 링크는 기사가 아니다
         if link and re.search(r"/(pickup/\d+|articles/)", link):
-            items.append({"title": entry.get("title", ""), "url": link})
+            items.append({
+                "title":     entry.get("title", ""),
+                "url":       link,
+                "published": _published(entry),
+            })
     return items
+
+
+def _published(entry) -> datetime | None:
+    """RSS 항목의 발행 시각(UTC). 없으면 None."""
+    parsed = entry.get("published_parsed") or entry.get("updated_parsed")
+    return datetime(*parsed[:6], tzinfo=timezone.utc) if parsed else None
+
+
+def filter_recent(items: list[dict], max_age_hours: float, now: datetime | None = None) -> list[dict]:
+    """
+    발행 시각이 max_age_hours 이내인 기사만 남기고 최신순으로 정렬한다.
+    발행 시각을 알 수 없는 기사는 최신인지 확인할 수 없으므로 제외한다.
+    """
+    now = now or datetime.now(timezone.utc)
+    cutoff = now - timedelta(hours=max_age_hours)
+    recent = [i for i in items if i.get("published") and cutoff <= i["published"] <= now + timedelta(hours=1)]
+    undated = sum(1 for i in items if not i.get("published"))
+    if undated:
+        print(f"⚠️  발행 시각이 없는 기사 {undated}개 제외")
+    return sorted(recent, key=lambda i: i["published"], reverse=True)
 
 
 # ─────────────────────────────────────────
@@ -128,13 +153,15 @@ def _interleave(lists: list[list[dict]]) -> list[dict]:
     return merged
 
 
-def list_candidates(difficulty: str, categories: list[str]) -> list[dict]:
+def list_candidates(difficulty: str, categories: list[str], max_age_hours: float = 24) -> list[dict]:
     """
     난이도에 맞는 소스에서 기사 후보 목록을 만든다.
     advanced는 朝日新聞, 그 외(beginner/intermediate)는 Yahoo! 분야별 RSS.
+    발행 후 max_age_hours 이내의 기사만, 최신순으로 반환한다.
     """
     if difficulty == "advanced":
-        source, items = "朝日新聞", _parse_rss(ASAHI_RSS)
+        source = "朝日新聞"
+        items = filter_recent(_parse_rss(ASAHI_RSS), max_age_hours)
         return [{**i, "source": source} for i in items]
 
     per_category = []
@@ -144,7 +171,8 @@ def list_candidates(difficulty: str, categories: list[str]) -> list[dict]:
             print(f"⚠️  알 수 없는 카테고리: {category}")
             continue
         source = f"Yahoo!ニュース ({category})"
-        per_category.append([{**i, "source": source} for i in _parse_rss(rss_url)])
+        items = filter_recent(_parse_rss(rss_url), max_age_hours)
+        per_category.append([{**i, "source": source} for i in items])
     return _interleave(per_category)
 
 
@@ -156,6 +184,7 @@ def fetch_articles(
     categories: list[str],
     sent: set[str],
     max_articles: int = 6,
+    max_age_hours: float = 24,
 ) -> list[dict]:
     """
     아직 보내지 않은 기사의 본문까지 가져온다.
@@ -163,16 +192,18 @@ def fetch_articles(
     Args:
         sent: 이미 전송한 기사 URL 집합
         max_articles: 본문 추출에 성공한 기사를 이 개수까지만 모은다
+        max_age_hours: 발행 후 이 시간 이내의 기사만 쓴다
 
     Returns:
         [{"title", "url"(RSS 링크, 중복 판별 키), "link"(표시용 최종 URL),
           "source", "text"}, ...]
     """
-    print(f"📡 뉴스 수집 시작 (난이도: {difficulty}, 분야: {categories})")
+    print(f"📡 뉴스 수집 시작 (난이도: {difficulty}, 분야: {categories}, 최근 {max_age_hours:g}시간)")
 
-    candidates = [c for c in list_candidates(difficulty, categories) if c["url"] not in sent]
+    candidates = [c for c in list_candidates(difficulty, categories, max_age_hours)
+                  if c["url"] not in sent]
     if not candidates:
-        print("⚠️  새 기사가 없습니다.")
+        print("⚠️  조건에 맞는 새 기사가 없습니다.")
         return []
 
     result = []

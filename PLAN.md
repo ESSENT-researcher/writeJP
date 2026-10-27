@@ -55,7 +55,7 @@ config.json ─┐
 | `advanced` | 朝日新聞 RSS | 동작 확인 (유료 기사는 본문 일부만 노출, 간헐적 타임아웃 → 1회 재시도) |
 
 핵심 동작:
-1. RSS에서 기사 링크 수집 후 이미 보낸 URL 제외.
+1. RSS에서 기사 링크 수집 → **발행 후 `max_age_hours`(기본 24시간) 이내인 기사만** 남기고 최신순 정렬 → 이미 보낸 URL 제외. 발행 시각이 없는 기사는 제외한다. (실행이 KST 08:00이라 "오늘 날짜" 기준으로 자르면 새벽 기사 몇 건만 남아서 달력 기준 대신 최근 N시간 기준으로 했다.)
 2. **Yahoo RSS 링크는 `/pickup/` 요약 페이지**다. 그 안의 `/articles/…` 링크를 한 번 더 따라가야 본문(`div.article_body`)이 나온다.
 3. 본문 추출은 소스별 선택자 → 실패하면 `<p>` 폴백.
 4. 기사 하나가 실패해도 다음 기사로 넘어간다. 전부 실패하면 종료 코드 1.
@@ -108,7 +108,8 @@ GitHub Actions 러너는 매번 새로 만들어지므로 로컬 파일은 저�
   "difficulty": "intermediate",
   "categories": ["business", "world"],
   "sentence_count": 10,
-  "vocab_levels": null
+  "vocab_levels": null,
+  "max_age_hours": 24
 }
 ```
 - `vocab_levels`가 `null`이면 난이도에 따라 자동 결정.

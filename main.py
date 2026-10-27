@@ -49,7 +49,8 @@ def main() -> int:
         return 1
 
     articles = fetch_articles(config["difficulty"], config["categories"],
-                              sent=set(load_sent_articles()))
+                              sent=set(load_sent_articles()),
+                              max_age_hours=config["max_age_hours"])
     if not articles:
         print("❌ 뉴스를 가져오지 못했습니다.")
         return 1

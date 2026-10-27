@@ -11,6 +11,7 @@
 | `difficulty` | `beginner` / `intermediate` / `advanced` |
 | `categories` | `world, business, domestic, science, sports, entertainment` (advanced는 무시) |
 | `sentence_count` | 목표 문장 수 |
+| `max_age_hours` | 발행 후 이 시간 이내의 기사만 사용 (기본 24). 최신 기사부터 고른다 |
 | `vocab_levels` | `null`이면 난이도에 따라 자동 (beginner N5·N4 / intermediate N3·N2 / advanced N2·N1) |
 
 실행 시각은 `.github/workflows/daily_news.yml`의 cron이 정한다 (현재 KST 08:00).

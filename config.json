@@ -2,5 +2,6 @@
   "difficulty": "intermediate",
   "categories": ["business", "world"],
   "sentence_count": 10,
+  "max_age_hours": 24,
   "vocab_levels": null
 }
